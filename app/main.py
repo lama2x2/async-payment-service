@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from app.api.payments import router as payments_router
 from app.config import get_settings
 from app.db import create_engine, create_session_factory
+from app.log import setup_logging
 from app.messaging.broker import connect_broker, create_broker
 from app.outbox.relay import OutboxRelay, RabbitOutboxPublisher
 
@@ -41,6 +42,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 def create_app() -> FastAPI:
+    setup_logging()
     app = FastAPI(title="Payment Service", version="0.1.0", lifespan=lifespan)
     app.include_router(payments_router)
 
