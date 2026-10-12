@@ -1,0 +1,2 @@
+PAYMENTS_EXCHANGE_NAME = "payments"
+PAYMENTS_NEW_ROUTING_KEY = "payments.new"
