@@ -1,3 +1,5 @@
+import asyncio
+import contextlib
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -6,16 +8,35 @@ from fastapi import FastAPI
 from app.api.payments import router as payments_router
 from app.config import get_settings
 from app.db import create_engine, create_session_factory
+from app.messaging.broker import connect_broker, create_broker
+from app.outbox.relay import OutboxRelay, RabbitOutboxPublisher
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     engine = create_engine(settings.database_url)
-    app.state.session_factory = create_session_factory(engine)
+    session_factory = create_session_factory(engine)
+    app.state.session_factory = session_factory
+
+    broker = create_broker(settings)
+    await connect_broker(broker, settings)
+
+    relay = OutboxRelay(
+        session_factory,
+        RabbitOutboxPublisher(broker),
+        batch_size=settings.outbox_batch_size,
+        poll_interval=settings.outbox_poll_interval,
+    )
+    relay_task = asyncio.create_task(relay.run(), name="outbox-relay")
+
     try:
         yield
     finally:
+        relay_task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await relay_task
+        await broker.stop()
         await engine.dispose()
 
 
