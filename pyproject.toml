@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Async payment processing service"
 requires-python = ">=3.12"
 dependencies = [
+    "alembic>=1.20.0",
     "asyncpg>=0.32.0",
     "fastapi>=0.143.0",
     "pydantic-settings>=2.15.0",
