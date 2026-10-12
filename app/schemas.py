@@ -35,7 +35,7 @@ class PaymentRead(BaseModel):
     amount: Decimal
     currency: Currency
     description: str
-    metadata: dict[str, Any] = Field(validation_alias=AliasChoices("metadata", "meta"))
+    metadata: dict[str, Any] = Field(validation_alias=AliasChoices("meta", "metadata"))
     status: PaymentStatus
     idempotency_key: str
     webhook_url: str
